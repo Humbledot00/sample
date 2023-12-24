@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Sankalp</title>
+</head>
+<body>
+  <div id="chat-container" class="container">
+    <form id="chat-form">
+      <input id="message-input" placeholder="Type your message here" autocomplete="off" />
+      <button id="send-button">Send</button>
+    </form>
+    <p id="received-message"></p>
+  </div>
+
+  <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+  <script>
+    const socket = io();
+    const form = document.querySelector('#chat-form');
+    const input = document.querySelector('#message-input');
+    const receivedMessage = document.querySelector('#received-message');
+
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      const userMessage = input.value;
+      if (userMessage) {
+        // Display user message
+        receivedMessage.textContent = `User: ${userMessage}`;
+
+        // Send user message to Python server
+        try {
+          const response = await fetch('http://localhost:5001/bot', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message: userMessage }),
+          });
+
+          if (response.ok) {
+            const botResponse = await response.json();
+            receivedMessage.textContent = `Bot: ${botResponse.bot_reply}`;
+          } else {
+            console.error('Error receiving bot reply:', response.statusText);
+          }
+        } catch (error) {
+          console.error('Error communicating with the Python server:', error.message);
+        }
+
+        input.value = '';
+      }
+    });
+  </script>
+</body>
+</html>
